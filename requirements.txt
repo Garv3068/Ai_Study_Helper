@@ -19,3 +19,6 @@ firebase-admin==6.5.0
 # Optional utilities
 requests==2.32.3
 beautifulsoup4==4.12.3
+
+pdfplumber
+matplotlib
