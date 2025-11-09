@@ -1,0 +1,24 @@
+import streamlit as st
+
+st.title("ℹ️ About EduNex")
+st.markdown("""
+### EduNex — AI-Powered Study Helper  
+
+EduNex helps students simplify learning using AI and smart NLP tools.
+
+**Features (MVP):**
+- PDF & Text Summarization  
+- Auto Quiz Generator  
+- Motivational feedback  
+- Clean, responsive UI  
+
+**Coming Soon (Phase 2):**
+- Mnemonics-based learning  
+- Progress dashboard  
+- Google Books & LLM integration  
+- Paid/Free user tiers  
+
+---
+👨‍💻 **Developer:** Garv Goel  
+💡 *Member of Google Developer Group & NVIDIA Developer Program*
+""")

@@ -1,0 +1,7 @@
+[theme]
+base="dark"
+primaryColor="#07519aff"          # electric blue accent
+backgroundColor="#0E1117"       # deep modern black
+secondaryBackgroundColor="#1E222A"
+textColor="#FFFFFF"
+font="sans serif"
