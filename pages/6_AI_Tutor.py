@@ -6,12 +6,12 @@ import re
 # PAGE CONFIG
 # ---------------------------
 st.set_page_config(
-    page_title="AI Tutor | EduNex",
+    page_title="AI Tutor | NexStudy",
     page_icon="🤖",
     layout="wide"
 )
 
-st.title("🤖 EduNex AI Tutor")
+st.title("🤖 NexStudy AI Tutor")
 st.caption("Your personal AI-powered learning companion — explain any topic clearly with real web insights.")
 
 # ---------------------------
