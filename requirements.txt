@@ -21,4 +21,6 @@ requests==2.32.3
 beautifulsoup4==4.12.3
 
 pdfplumber
-matplotlib
+matplotlib==3.9.2
+duckduckgo-search
+google-generativeai
