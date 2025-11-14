@@ -43,7 +43,7 @@ tab1, tab2 = st.tabs(["⚙️ Code Generator ", "🛠️ AI Debugger (Rule-Based
 # =====================================================
 
 with tab1:
-    st.subheader("⚙️ AI Code Generator (Gemini)")
+    st.subheader("⚙️ AI Code Generator ")
 
     lang_choice = st.selectbox("Select Language", list(SUPPORTED_LANGUAGES.keys()))
     syntax = SUPPORTED_LANGUAGES[lang_choice]
