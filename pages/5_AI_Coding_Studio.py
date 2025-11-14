@@ -82,7 +82,7 @@ with tab1:
 # =====================================================
 
 with tab2:
-    st.subheader("🛠️ Smart Debugger (No OpenAI)")
+    st.subheader("🛠️ Smart Debugger")
 
     debug_lang = st.selectbox("Select Language to Debug", ["Python", "HTML", "CSS", "JavaScript"])
     buggy_code = st.text_area("Paste your code:", height=250)
