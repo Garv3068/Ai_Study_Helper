@@ -13,14 +13,14 @@ GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 genai.configure(api_key=GEMINI_API_KEY)
 
 # OpenAI (Code Debugger)
-OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
-client = OpenAI(api_key=OPENAI_API_KEY)
+# OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
+# client = OpenAI(api_key=OPENAI_API_KEY)
 
 # ----------------------------------
 # MODELS
 # ----------------------------------
 
-gemini_model = genai.GenerativeModel("gemini-1.5-flash")
+gemini_model = genai.GenerativeModel("gemini-2.5-flash")
 
 # ----------------------------------
 # LANGUAGE OPTIONS
