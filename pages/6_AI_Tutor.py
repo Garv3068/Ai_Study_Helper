@@ -37,8 +37,16 @@ if st.session_state["last_reset"] != today:
 
 requests_left = DAILY_LIMIT - st.session_state["usage_count"]
 
-# Display remaining requests
-st.info(f"📊 **Requests Left Today: {requests_left}/{DAILY_LIMIT}**")
+# ---------------------------
+# DISPLAY LIMIT (LIVE)
+# ---------------------------
+st.subheader("📊 Daily Usage Limit")
+
+st.write(f"**Requests Left Today: `{requests_left}` out of `{DAILY_LIMIT}`**")
+
+# Progress bar (used requests)
+progress_value = st.session_state["usage_count"] / DAILY_LIMIT
+st.progress(progress_value)
 
 # ---------------------------
 # GEMINI INITIALIZATION
@@ -102,7 +110,9 @@ if requests_left <= 0:
 
 if st.button("🧠 Explain Topic"):
     if topic.strip():
-        st.session_state["usage_count"] += 1  # Count this request
+
+        # Count usage BEFORE generating
+        st.session_state["usage_count"] += 1
         requests_left = DAILY_LIMIT - st.session_state["usage_count"]
 
         with st.spinner("📚 Generating explanation..."):
@@ -114,8 +124,17 @@ if st.button("🧠 Explain Topic"):
 
         st.success(f"✨ Request used! **Remaining: {requests_left}/{DAILY_LIMIT}**")
 
+        # Update progress bar after request
+        st.progress(st.session_state["usage_count"] / DAILY_LIMIT)
+
     else:
         st.warning("Please enter a topic before clicking 'Explain Topic'.")
+
+# ---------------------------
+# FOOTER
+# ---------------------------
+st.markdown("<br><br>", unsafe_allow_html=True)
+st.info("💡 Tip: Ask conceptual, programming, or technical topics for the best learning experience!")
 
 # ---------------------------
 # FOOTER
