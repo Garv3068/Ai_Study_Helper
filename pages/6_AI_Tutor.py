@@ -40,9 +40,9 @@ requests_left = DAILY_LIMIT - st.session_state["usage_count"]
 # ---------------------------
 # DISPLAY LIMIT (LIVE)
 # ---------------------------
-st.subheader("📊 Daily Usage Limit")
+# st.subheader("📊 Daily Usage Limit")
 
-st.write(f"**Requests Left Today: `{requests_left}` out of `{DAILY_LIMIT}`**")
+st.write(f"**Daily Usage Limit : `{DAILY_LIMIT}`**")
 
 # Progress bar (used requests)
 progress_value = st.session_state["usage_count"] / DAILY_LIMIT
