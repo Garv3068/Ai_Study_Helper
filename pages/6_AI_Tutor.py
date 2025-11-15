@@ -135,9 +135,3 @@ if st.button("🧠 Explain Topic"):
 # ---------------------------
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.info("💡 Tip: Ask conceptual, programming, or technical topics for the best learning experience!")
-
-# ---------------------------
-# FOOTER
-# ---------------------------
-st.markdown("<br><br>", unsafe_allow_html=True)
-st.info("💡 Tip: Ask conceptual, programming, or technical topics for the best learning experience!")
