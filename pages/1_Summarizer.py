@@ -1,8 +1,17 @@
 import streamlit as st
 import google.generativeai as genai
 
-# --- Configure Gemini API ---
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+# Safe config for all pages
+def load_gemini_key():
+    try:
+        return st.secrets["GEMINI_API_KEY"]
+    except KeyError:
+        st.error("❌ GEMINI_API_KEY is missing in Streamlit Secrets!")
+        st.stop()
+
+gemini_api_key = load_gemini_key()
+genai.configure(api_key=gemini_api_key)
+
 
 # --- Initialize model ---
 model = genai.GenerativeModel("gemini-2.5-flash")
