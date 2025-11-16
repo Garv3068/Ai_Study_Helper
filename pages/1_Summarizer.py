@@ -2,19 +2,27 @@ import streamlit as st
 import google.generativeai as genai
 
 # Safe config for all pages
-def load_gemini_key():
+# ---------------------------
+# GEMINI INITIALIZATION
+# ---------------------------
+@st.cache_resource
+def init_gemini():
     try:
-        return st.secrets["gemini_api_key"]
-    except KeyError:
-        st.error("❌ GEMINI_API_KEY is missing in Streamlit Secrets!")
-        st.stop()
+        key = st.secrets["GEMINI_API_KEY"]
+        genai.configure(api_key=key)
 
-gemini_api_key = load_gemini_key()
-genai.configure(api_key=gemini_api_key)
+        try:
+            return genai.GenerativeModel("gemini-2.5-flash")
+        except:
+            st.warning("⚠️ Gemini 2.5 Flash not available. Switching to Gemini 2.0 Flash.")
+            return genai.GenerativeModel("gemini-2.0-flash")
+
+    except Exception as e:
+        st.error(f"Gemini initialization error: {e}")
+        return None
 
 
-# --- Initialize model ---
-model = genai.GenerativeModel("gemini-2.5-flash")
+gemini_model = init_gemini()
 
 # --- Page title ---
 st.title("📄 Smart Text Summarizer (NexStudy)")
