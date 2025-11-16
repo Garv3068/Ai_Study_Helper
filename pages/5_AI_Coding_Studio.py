@@ -6,8 +6,9 @@ import re
 # API KEY (Gemini Only)
 # ----------------------------------
 
-GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
-genai.configure(api_key=GEMINI_API_KEY)
+key = st.secrets["GEMINI_API_KEY"]
+genai.configure(api_key=key)
+
 
 # Gemini Model
 gemini_model = genai.GenerativeModel("gemini-2.5-flash")
