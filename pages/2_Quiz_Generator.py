@@ -20,7 +20,7 @@ def extract_text_from_pdf(uploaded_file):
 def generate_questions_ai(text, num_questions=5):
     """Generate MCQ questions using Gemini"""
     try:
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-2.5-flash")
 
         prompt = f"""
 You are an expert MCQ Quiz Generator.
