@@ -13,19 +13,16 @@ def init_gemini():
     try:
         key = st.secrets["GEMINI_API_KEY"]
         genai.configure(api_key=key)
-
         try:
-            return genai.GenerativeModel("gemini-2.5-flash")
-        except:
-            st.warning("⚠️ Gemini 2.5 Flash not available. Using Gemini 2.0 Flash.")
-            return genai.GenerativeModel("gemini-2.0-flash")
-
+            return genai.GenerativeModel("gemini-2.5-flash-lite")
+        except Exception:
+            st.warning("⚠️ Gemini 2.5 Flash not available. Switching to Gemini 2.0 Flash.")
+            return genai.GenerativeModel("gemini-2.0-flash-lite")
     except Exception as e:
         st.error(f"Gemini initialization error: {e}")
         return None
 
-gemini_model = init_gemini()  # ✅ Now available everywhere
-
+gemini_model = init_gemini()
 # ------------------------------------------------------------
 # PAGE TITLE + TABS
 # ------------------------------------------------------------
