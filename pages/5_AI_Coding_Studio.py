@@ -32,7 +32,7 @@ st.caption("Generate, debug, and learn to code — all in one place!")
 tab1, tab2 = st.tabs(["⚙️ Code Generator", "🧠 Smart Debugger"])
 
 # ------------------------------------------------------------
-# TAB 1 — RULE-BASED CODE GENERATOR (unchanged)
+# TAB 1 — GEMINI-ONLY CODE GENERATOR (NO RULE BASED)
 # ------------------------------------------------------------
 with tab1:
     st.subheader("⚙️ Code Generator")
@@ -43,67 +43,37 @@ with tab1:
     if st.button("🚀 Generate Code"):
         if not prompt.strip():
             st.error("Please enter a prompt first.")
-        else:
-            st.write("🧠 Generating code...")
+            st.stop()
 
-            code = ""
-            if lang == "Python":
-                if "calculator" in prompt.lower():
-                    code = """
-def add(a, b):
-    return a + b
+        if gemini_model is None:
+            st.error("Gemini model not initialized.")
+            st.stop()
 
-def subtract(a, b):
-    return a - b
+        with st.spinner("✨ Using Gemini to generate code..."):
+            try:
+                ai_prompt = f"""
+                You are an expert {lang} developer.
 
-def multiply(a, b):
-    return a * b
+                Generate fully working, clean and optimized code for:
+                "{prompt}"
 
-def divide(a, b):
-    return a / b if b != 0 else "Cannot divide by zero"
+                MUST FOLLOW:
+                - Only output code
+                - No explanation text
+                - No markdown fences except codeblocks if required
 
-print("Calculator Example:")
-print(add(10, 5))
-"""
-                elif "hello" in prompt.lower():
-                    code = 'print("Hello, World!")'
-                else:
-                    code = f'# Basic Python Template\nprint("Code for: {prompt}")'
+                Language: {lang}
+                """
 
-            elif lang == "HTML":
-                code = f"""
-<!DOCTYPE html>
-<html>
-<head>
-<title>{prompt.title()}</title>
-</head>
-<body>
-<h1>{prompt.title()}</h1>
-<p>This is a simple webpage created by AI.</p>
-</body>
-</html>
-"""
+                response = gemini_model.generate_content(ai_prompt)
 
-            elif lang == "CSS":
-                code = """
-body {
-    background-color: black;
-    color: white;
-    font-family: Arial;
-}
-"""
+                code_result = response.text.strip() if response.text else "No code generated."
 
-            elif lang == "JavaScript":
-                code = f"""
-// Auto-generated JS code
-function greet() {{
-  console.log("Hello from NexStudy AI — {prompt}!");
-}}
-greet();
-"""
+                st.success(f"✅ Generated {lang} code below:")
+                st.code(code_result, language=lang.lower())
 
-            st.success(f"✅ Generated {lang} code below:")
-            st.code(code, language=lang.lower())
+            except Exception as e:
+                st.error(f"Gemini Code Generation Error: {e}")
 
 # ------------------------------------------------------------
 # TAB 2 — GEMINI-POWERED DEBUGGER
