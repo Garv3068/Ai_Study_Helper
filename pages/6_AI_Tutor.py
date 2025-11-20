@@ -18,7 +18,7 @@ st.caption("Your personal AI-powered learning companion — choose explanation d
 # ---------------------------
 # CONSTANTS & USAGE LIMIT
 # ---------------------------
-DAILY_LIMIT = 7  # requests per user per day
+DAILY_LIMIT = 50  # requests per user per day
 
 # ---------------------------
 # SESSION STATE INIT
