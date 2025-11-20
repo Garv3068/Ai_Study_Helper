@@ -19,7 +19,7 @@ st.caption("Your personal AI-powered learning companion — choose explanation d
 # ---------------------------
 # CONSTANTS & USAGE LIMIT
 # ---------------------------
-DAILY_LIMIT = 7     # requests per user per day
+### DAILY_LIMIT = 7     # requests per user per day
 
 # ---------------------------
 # SESSION STATE (usage counting)
@@ -97,9 +97,9 @@ def extract_links(text: str):
 # ---------------------------
 # UI: show remaining requests (live)
 # ---------------------------
-requests_left = DAILY_LIMIT - st.session_state["usage_count"]
-st.info(f"📊 Requests Left Today: {requests_left}/{DAILY_LIMIT}")
-st.progress(min(st.session_state["usage_count"]/DAILY_LIMIT, 1.0))
+# ####requests_left = DAILY_LIMIT - st.session_state["usage_count"]
+# ####st.info(f"📊 Requests Left Today: {requests_left}/{DAILY_LIMIT}")
+# #####st.progress(min(st.session_state["usage_count"]/DAILY_LIMIT, 1.0))
 
 # ---------------------------
 # User controls
@@ -113,9 +113,9 @@ include_links = st.checkbox("Include YouTube & web links (recommended)", value=T
 # ---------------------------
 # Guard: usage limit
 # ---------------------------
-if requests_left <= 0:
-    st.error("🚫 Daily limit reached! You can ask more questions tomorrow.")
-    st.stop()
+# ####if requests_left <= 0:
+#     #####st.error("🚫 Daily limit reached! You can ask more questions tomorrow.")
+#     #####st.stop()
 
 # ---------------------------
 # Core function: call Gemini
@@ -158,9 +158,9 @@ if st.button("🧠 Explain Topic"):
                 for u in result["links"]:
                     # show cleaned display
                     st.write(f"- [{u}]({u})")
-            st.success(f"✨ Request used! Remaining: {requests_left}/{DAILY_LIMIT}")
+            # st.success(f"✨ Request used! Remaining: {requests_left}/{DAILY_LIMIT}")
             st.progress(min(st.session_state["usage_count"]/DAILY_LIMIT, 1.0))
-
+            st.success("✨ Request executed.......")
 # ---------------------------
 # Footer help
 # ---------------------------
