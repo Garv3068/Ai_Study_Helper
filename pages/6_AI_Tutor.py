@@ -23,16 +23,16 @@ st.caption("Your personal AI-powered learning companion — choose explanation d
 
 # ---------------------------
 # SESSION STATE (usage counting)
-# ---------------------------
-if "usage_count" not in st.session_state:
-    st.session_state["usage_count"] = 0
-if "last_reset" not in st.session_state:
-    st.session_state["last_reset"] = str(datetime.date.today())
-# auto reset each day
-today = str(datetime.date.today())
-if st.session_state["last_reset"] != today:
-    st.session_state["usage_count"] = 0
-    st.session_state["last_reset"] = today
+# # ---------------------------
+# #####if "usage_count" not in st.session_state:
+#     #####st.session_state["usage_count"] = 0
+# #####if "last_reset" not in st.session_state:
+#  #####   st.session_state["last_reset"] = str(datetime.date.today())
+# # auto reset each day
+# ####today = str(datetime.date.today())
+# ####if st.session_state["last_reset"] != today:
+#####     st.session_state["usage_count"] = 0
+#####     st.session_state["last_reset"] = today
 
 # ---------------------------
 # GEMINI INITIALIZATION
@@ -70,9 +70,9 @@ def build_prompt(topic: str, level: str, request_youtube: bool = True, max_examp
     instruction = level_map.get(level, level_map["College"])
 
     extra = ""
-    if request_youtube:
-        extra = "Also include 2–3 relevant YouTube links and 2–3 web links (if available) that help understand the topic. " \
-                "Mark links clearly so they can be extracted (e.g., start links on a new line)."
+    # if request_youtube:
+        # extra = "Also include 2–3 relevant YouTube links and 2–3 web links (if available) that help understand the topic. " \
+                # "Mark links clearly so they can be extracted (e.g., start links on a new line)."
 
     prompt = (
         f"You are an expert tutor. {instruction}\n\n"
@@ -139,10 +139,10 @@ def get_explanation(topic_text: str, level_choice: str, include_links_flag: bool
 if st.button("🧠 Explain Topic"):
     if not topic.strip():
         st.warning("Please enter a topic before clicking 'Explain Topic'.")
-    else:
-        # increment usage count immediately to avoid race
-        st.session_state["usage_count"] += 1
-        requests_left = DAILY_LIMIT - st.session_state["usage_count"]
+    #### else:
+       ### # increment usage count immediately to avoid race
+        ### st.session_state["usage_count"] += 1
+      ##  # requests_left = DAILY_LIMIT - st.session_state["usage_count"]
 
         with st.spinner("📚 Generating explanation..."):
             result = get_explanation(topic, level, include_links)
@@ -159,7 +159,7 @@ if st.button("🧠 Explain Topic"):
                     # show cleaned display
                     st.write(f"- [{u}]({u})")
             # st.success(f"✨ Request used! Remaining: {requests_left}/{DAILY_LIMIT}")
-            st.progress(min(st.session_state["usage_count"]/DAILY_LIMIT, 1.0))
+            ##st.progress(min(st.session_state["usage_count"]/DAILY_LIMIT, 1.0))
             st.success("✨ Request executed.......")
 # ---------------------------
 # Footer help
