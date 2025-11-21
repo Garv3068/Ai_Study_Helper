@@ -36,7 +36,7 @@ def init_gemini():
         pass
 
     if not key:
-        # Fallback if not in secrets (optional warning)
+        # Fallback if not in secrets
         return None
 
     try:
@@ -119,33 +119,56 @@ with left:
 
 # ---------------- Right chat column ----------------
 with right:
-    # chat container styling
+    # ------------------------ CSS FIX START ------------------------
+    # Added color: #000000; to ensure text is black even in Dark Mode
     st.markdown(
         """
         <style>
         .chat-box { max-height: 64vh; overflow:auto; padding:8px; display:flex; flex-direction:column; gap:12px; }
-        .user { align-self:flex-end; background:#DCF8C6; padding:12px; border-radius:12px; max-width:80%; }
-        .ai { align-self:flex-start; background:#F1F3F5; padding:12px; border-radius:12px; max-width:80%; }
+        .user { 
+            align-self:flex-end; 
+            background:#DCF8C6; 
+            color: #000000; 
+            padding:12px; 
+            border-radius:12px; 
+            max-width:80%; 
+        }
+        .ai { 
+            align-self:flex-start; 
+            background:#F1F3F5; 
+            color: #000000; 
+            padding:12px; 
+            border-radius:12px; 
+            max-width:80%; 
+        }
         .meta { font-size:12px; color:#666; margin-top:6px; }
         </style>
         """, unsafe_allow_html=True)
+    # ------------------------ CSS FIX END --------------------------
 
     chat_box = st.container()
     with chat_box:
         st.markdown('<div class="chat-box">', unsafe_allow_html=True)
         for i, msg in enumerate(st.session_state.messages):
             if msg["role"] == "user":
-                # ------------------------ FIX START ------------------------
-                # Removed the nested st.markdown() call.
-                # Replaced newlines with <br> so paragraphs show up in HTML.
+                # Clean up formatting for display
                 user_text = msg['text'].replace('\n', '<br>')
                 st.markdown(f"<div class='user'><b>You:</b><br>{user_text}</div>", unsafe_allow_html=True)
-                # ------------------------ FIX END --------------------------
             else:
                 # Assistant message
-                st.markdown(f"<div class='ai'><b>NexStudy Tutor:</b><br>{msg['text']}</div>", unsafe_allow_html=True)
+                # We use st.markdown inside the div to render bolding/lists properly if possible, 
+                # but simple text string insertion is safer for layout. 
+                # For complex markdown rendering inside HTML, Streamlit can be tricky.
+                # Here we stick to inserting the raw text inside the div.
+                # To make markdown render *inside* the HTML bubble, we often need a library or simple replacements.
+                # For now, we just dump the text. If you want markdown rendering, standard st.chat_message is better.
                 
-                # Action buttons for assistant messages
+                # We convert newlines to <br> for basic formatting since we are using raw HTML
+                ai_text_display = msg['text'].replace('\n', '<br>')
+                
+                st.markdown(f"<div class='ai'><b>NexStudy Tutor:</b><br>{ai_text_display}</div>", unsafe_allow_html=True)
+                
+                # Action buttons
                 cols = st.columns([1,1,1,1,1])
                 with cols[0]:
                     if st.button(f"Explain Simpler 🔍 #{i}", key=f"simpler_{i}"):
@@ -206,7 +229,7 @@ with right:
         submit = st.form_submit_button("Send")
 
         if submit:
-            # build content: prefer uploaded asset content if provided + user text
+            # build content
             content_parts = []
             if uploaded_pdf:
                 pdf_bytes = uploaded_pdf.read()
@@ -250,6 +273,9 @@ with right:
                         res = call_gemini(prompt)
                         if res.get("error"):
                             st.error(res["error"])
+                        else:
+                            append_assistant_message(res["text"])
+                            st.rerun()
                         else:
                             append_assistant_message(res["text"])
                             st.rerun()
