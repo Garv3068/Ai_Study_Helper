@@ -18,7 +18,7 @@ except Exception:
 st.set_page_config(page_title="NexStudy Tutor", page_icon="🤖", layout="wide")
 st.markdown("<style>footer{visibility:hidden;} </style>", unsafe_allow_html=True)
 
-# Optional logo (developer-provided file path). If missing, skip.
+# Optional logo
 _logo_path = "/mnt/data/A_logo_for_EduNex,_an_AI-powered_smart_study_assis.png"
 if os.path.exists(_logo_path):
     st.image(_logo_path, width=150)
@@ -36,12 +36,10 @@ def init_gemini():
         pass
 
     if not key:
-        # Fallback if not in secrets
         return None
 
     try:
         genai.configure(api_key=key)
-        # Use the chosen model: gemini-2.0-flash (fast + cheap)
         return genai.GenerativeModel("gemini-2.0-flash")
     except Exception as e:
         st.error(f"Gemini initialization error: {e}")
@@ -51,7 +49,7 @@ gemini_model = init_gemini()
 
 # ---------------- Session state for chat ----------------
 if "messages" not in st.session_state:
-    st.session_state.messages = []  # list of dicts: {"role":"user"/"assistant","text":..., "meta":{...}}
+    st.session_state.messages = []
 
 if "saved" not in st.session_state:
     st.session_state.saved = []
@@ -82,7 +80,7 @@ def ocr_image(uploaded_image_bytes):
 
 def call_gemini(prompt: str, max_output_tokens: int = 1024):
     if gemini_model is None:
-        return {"error": "Gemini API key not configured or model not initialized."}
+        return {"error": "Gemini API key not configured."}
     try:
         resp = gemini_model.generate_content(prompt)
         text = resp.text or ""
@@ -96,9 +94,10 @@ def append_user_message(text, meta=None):
 def append_assistant_message(text, meta=None):
     st.session_state.messages.append({"role": "assistant", "text": text, "meta": meta or {}})
 
-# ---------------- Left control column ----------------
+# ---------------- Layout ----------------
 left, right = st.columns([1, 2])
 
+# ---------------- Left Column (Controls) ----------------
 with left:
     st.markdown("### ⚙️ Controls")
     st.info("Use the chat on the right to ask doubts. Upload PDFs or images if you like.")
@@ -108,6 +107,8 @@ with left:
     if st.button("Clear chat"):
         st.session_state.messages = []
         st.success("Chat cleared.")
+        st.rerun()
+        
     if st.button("Saved answers"):
         if st.session_state.saved:
             st.write("Saved responses:")
@@ -117,10 +118,9 @@ with left:
         else:
             st.info("No saved answers yet.")
 
-# ---------------- Right chat column ----------------
+# ---------------- Right Column (Chat) ----------------
 with right:
-    # ------------------------ CSS FIX START ------------------------
-    # Added color: #000000; to ensure text is black even in Dark Mode
+    # CSS to ensure black text on chat bubbles
     st.markdown(
         """
         <style>
@@ -141,103 +141,85 @@ with right:
             border-radius:12px; 
             max-width:80%; 
         }
-        .meta { font-size:12px; color:#666; margin-top:6px; }
         </style>
         """, unsafe_allow_html=True)
-    # ------------------------ CSS FIX END --------------------------
 
     chat_box = st.container()
     with chat_box:
         st.markdown('<div class="chat-box">', unsafe_allow_html=True)
         for i, msg in enumerate(st.session_state.messages):
             if msg["role"] == "user":
-                # Clean up formatting for display
+                # Format user message
                 user_text = msg['text'].replace('\n', '<br>')
                 st.markdown(f"<div class='user'><b>You:</b><br>{user_text}</div>", unsafe_allow_html=True)
             else:
-                # Assistant message
-                # We use st.markdown inside the div to render bolding/lists properly if possible, 
-                # but simple text string insertion is safer for layout. 
-                # For complex markdown rendering inside HTML, Streamlit can be tricky.
-                # Here we stick to inserting the raw text inside the div.
-                # To make markdown render *inside* the HTML bubble, we often need a library or simple replacements.
-                # For now, we just dump the text. If you want markdown rendering, standard st.chat_message is better.
-                
-                # We convert newlines to <br> for basic formatting since we are using raw HTML
+                # Format AI message
                 ai_text_display = msg['text'].replace('\n', '<br>')
-                
                 st.markdown(f"<div class='ai'><b>NexStudy Tutor:</b><br>{ai_text_display}</div>", unsafe_allow_html=True)
                 
-                # Action buttons
+                # Buttons for AI response
                 cols = st.columns([1,1,1,1,1])
-                with cols[0]:
-                    if st.button(f"Explain Simpler 🔍 #{i}", key=f"simpler_{i}"):
-                        followup_prompt = f"Explain the following content in simpler terms, with short examples:\n\n{msg['text']}"
-                        res = call_gemini(followup_prompt)
-                        if res.get("error"):
-                            st.error(res["error"])
-                        else:
-                            append_assistant_message(res["text"])
-                            st.rerun()
-                with cols[1]:
-                    if st.button(f"Show Steps 🪜 #{i}", key=f"steps_{i}"):
-                        followup_prompt = f"Provide a step-by-step solution or breakdown for the following text:\n\n{msg['text']}"
-                        res = call_gemini(followup_prompt)
-                        if res.get("error"):
-                            st.error(res["error"])
-                        else:
-                            append_assistant_message(res["text"])
-                            st.rerun()
-                with cols[2]:
-                    if st.button(f"Generate Quiz 🎯 #{i}", key=f"quiz_{i}"):
-                        followup_prompt = f"Create 5 short MCQs (question + 4 options + correct answer) from the following explanation:\n\n{msg['text']}\n\nReturn concise results."
-                        res = call_gemini(followup_prompt)
-                        if res.get("error"):
-                            st.error(res["error"])
-                        else:
-                            append_assistant_message(res["text"])
-                            st.rerun()
-                with cols[3]:
-                    if st.button(f"Flashcards 🧾 #{i}", key=f"flash_{i}"):
-                        followup_prompt = f"Convert the following content into 8 short flashcards in 'Q: ... A: ...' format:\n\n{msg['text']}"
-                        res = call_gemini(followup_prompt)
-                        if res.get("error"):
-                            st.error(res["error"])
-                        else:
-                            append_assistant_message(res["text"])
-                            st.rerun()
-                with cols[4]:
-                    if st.button(f"Save 💾 #{i}", key=f"save_{i}"):
-                        st.session_state.saved.append({"title": msg["text"][:60]+"...", "text": msg["text"], "timestamp": str(datetime.datetime.now())})
-                        st.success("Saved to your local library.")
+                
+                if cols[0].button(f"Explain Simpler 🔍 #{i}", key=f"simpler_{i}"):
+                    res = call_gemini(f"Explain this simpler:\n\n{msg['text']}")
+                    if not res.get("error"):
+                        append_assistant_message(res["text"])
+                        st.rerun()
+                        
+                if cols[1].button(f"Show Steps 🪜 #{i}", key=f"steps_{i}"):
+                    res = call_gemini(f"Show step-by-step solution:\n\n{msg['text']}")
+                    if not res.get("error"):
+                        append_assistant_message(res["text"])
+                        st.rerun()
+
+                if cols[2].button(f"Generate Quiz 🎯 #{i}", key=f"quiz_{i}"):
+                    res = call_gemini(f"Create 5 MCQs from this:\n\n{msg['text']}")
+                    if not res.get("error"):
+                        append_assistant_message(res["text"])
+                        st.rerun()
+                        
+                if cols[3].button(f"Flashcards 🧾 #{i}", key=f"flash_{i}"):
+                    res = call_gemini(f"Create flashcards from this:\n\n{msg['text']}")
+                    if not res.get("error"):
+                        append_assistant_message(res["text"])
+                        st.rerun()
+                        
+                if cols[4].button(f"Save 💾 #{i}", key=f"save_{i}"):
+                    st.session_state.saved.append({"title": msg["text"][:50]+"...", "text": msg["text"], "timestamp": str(datetime.datetime.now())})
+                    st.success("Saved!")
 
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
 
-    # ---------------- Input area (form) ----------------
+    # ---------------- Input Form ----------------
     with st.form(key="doubt_form", clear_on_submit=False):
-        user_input = st.text_area("Ask your doubt (short question or paste full problem):", height=140, key="user_input")
+        user_input = st.text_area("Ask your doubt:", height=140, key="user_input")
+        
         uploaded_pdf = None
         uploaded_image = None
-        if input_choice in ("PDF + Text", "Image + Text"):
-            if input_choice == "PDF + Text":
-                uploaded_pdf = st.file_uploader("Upload PDF (≤10MB) (optional):", type=["pdf"])
-            else:
-                uploaded_image = st.file_uploader("Upload Image (png/jpg) (optional):", type=["png","jpg","jpeg"])
+        
+        # Handle file uploaders based on radio selection
+        if input_choice == "PDF + Text":
+            uploaded_pdf = st.file_uploader("Upload PDF (≤10MB):", type=["pdf"])
+        elif input_choice == "Image + Text":
+            uploaded_image = st.file_uploader("Upload Image:", type=["png","jpg","jpeg"])
 
         submit = st.form_submit_button("Send")
 
         if submit:
-            # build content
             content_parts = []
+            
+            # 1. Process PDF
             if uploaded_pdf:
                 pdf_bytes = uploaded_pdf.read()
                 pdf_text = extract_text_from_pdf(io.BytesIO(pdf_bytes))
                 if pdf_text:
                     content_parts.append("PDF content:\n" + pdf_text)
                 else:
-                    st.warning("Couldn't extract text from PDF. Please add a short description below.")
+                    st.warning("PDF text extraction failed.")
+            
+            # 2. Process Image
             if uploaded_image:
                 img_bytes = uploaded_image.read()
                 if TESSERACT_AVAILABLE:
@@ -245,37 +227,35 @@ with right:
                     if ocr_text:
                         content_parts.append("Image OCR text:\n" + ocr_text)
                     else:
-                        st.warning("Could not extract text from image. Please describe the image/question below.")
+                        st.warning("Image OCR failed.")
                 else:
-                    st.info("OCR not available in this environment. Please add a short description below.")
-            
+                    st.info("OCR not available.")
+
+            # 3. Process User Text
             if user_input and user_input.strip():
                 content_parts.append("User question:\n" + user_input.strip())
 
+            # 4. Final Validation & API Call
             if not content_parts:
-                st.warning("Please provide a question or upload a readable PDF/image or give a short description.")
+                st.warning("Please provide a question or upload a file.")
             else:
-                full_prompt_text = "\n\n".join(content_parts)
-                append_user_message(full_prompt_text, meta={"pdf": bool(uploaded_pdf), "image": bool(uploaded_image)})
+                full_text = "\n\n".join(content_parts)
+                append_user_message(full_text)
 
-                # Call Gemini for the main response
                 if gemini_model is None:
-                    st.error("Gemini model not initialized. Please set GEMINI_API_KEY in Streamlit secrets.")
+                    st.error("Gemini API Key missing.")
                 else:
-                    with st.spinner("NexStudy is thinking..."):
-                        system_preamble = (
-                            "You are NexStudy Tutor — an expert, patient teacher for college students. "
-                            "Answer concisely and clearly. Provide short examples when relevant. "
-                            "If a step-by-step solution is required, include steps. "
-                            "When the user uploads a PDF or image, base answers only on the provided content; do not hallucinate facts."
-                        )
-                        prompt = system_preamble + "\n\nUser content:\n\n" + full_prompt_text + "\n\nAnswer:"
-                        res = call_gemini(prompt)
+                    with st.spinner("Thinking..."):
+                        sys_prompt = """You are NexStudy Tutor. Answer clearly and concisely. 
+                        If the user asks for steps, provide them. 
+                        Base answers on the uploaded content if present."""
+                        
+                        final_prompt = f"{sys_prompt}\n\nUser Content:\n{full_text}\n\nAnswer:"
+                        
+                        res = call_gemini(final_prompt)
+                        
                         if res.get("error"):
                             st.error(res["error"])
-                        else:
-                            append_assistant_message(res["text"])
-                            st.rerun()
                         else:
                             append_assistant_message(res["text"])
                             st.rerun()
