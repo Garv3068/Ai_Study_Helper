@@ -105,8 +105,8 @@ with left:
     input_choice = st.radio("", ("Text", "PDF + Text", "Image + Text"), index=1)
 
     st.markdown("---")
-    st.markdown("**Model**")
-    st.markdown("Using: **gemini-2.0-flash** (fast & student-friendly)")
+    # st.markdown("**Model**")
+    # st.markdown("Using: **gemini-2.0-flash** (fast & student-friendly)")
 
     st.markdown("---")
     if st.button("Clear chat"):
