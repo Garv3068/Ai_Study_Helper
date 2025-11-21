@@ -2,17 +2,9 @@
 import streamlit as st
 import google.generativeai as genai
 import pdfplumber
-import io
 import os
 import datetime
 from PIL import Image
-
-# ---------------- Tesseract Check ----------------
-try:
-    import pytesseract
-    TESSERACT_AVAILABLE = True
-except Exception:
-    TESSERACT_AVAILABLE = False
 
 # ---------------- Page config ----------------
 st.set_page_config(page_title="NexStudy Tutor", page_icon="🤖", layout="wide")
@@ -68,21 +60,13 @@ def extract_text_from_pdf(uploaded_file):
         st.error(f"Error extracting PDF text: {e}")
         return ""
 
-def ocr_image(uploaded_image_bytes):
-    if not TESSERACT_AVAILABLE:
-        return None
-    try:
-        img = Image.open(io.BytesIO(uploaded_image_bytes)).convert("RGB")
-        return pytesseract.image_to_string(img)
-    except Exception as e:
-        st.warning(f"OCR failed: {e}")
-        return None
-
-def call_gemini(prompt: str, max_output_tokens: int = 1024):
+# Modified to accept a list of contents (text + images)
+def call_gemini(contents):
     if gemini_model is None:
         return {"error": "Gemini API key not configured."}
     try:
-        resp = gemini_model.generate_content(prompt)
+        # Gemini accepts a list [text, image, text...]
+        resp = gemini_model.generate_content(contents)
         text = resp.text or ""
         return {"text": text}
     except Exception as e:
@@ -149,11 +133,9 @@ with right:
         st.markdown('<div class="chat-box">', unsafe_allow_html=True)
         for i, msg in enumerate(st.session_state.messages):
             if msg["role"] == "user":
-                # Format user message
                 user_text = msg['text'].replace('\n', '<br>')
                 st.markdown(f"<div class='user'><b>You:</b><br>{user_text}</div>", unsafe_allow_html=True)
             else:
-                # Format AI message
                 ai_text_display = msg['text'].replace('\n', '<br>')
                 st.markdown(f"<div class='ai'><b>NexStudy Tutor:</b><br>{ai_text_display}</div>", unsafe_allow_html=True)
                 
@@ -161,25 +143,25 @@ with right:
                 cols = st.columns([1,1,1,1,1])
                 
                 if cols[0].button(f"Explain Simpler 🔍 #{i}", key=f"simpler_{i}"):
-                    res = call_gemini(f"Explain this simpler:\n\n{msg['text']}")
+                    res = call_gemini([f"Explain this simpler:\n\n{msg['text']}"])
                     if not res.get("error"):
                         append_assistant_message(res["text"])
                         st.rerun()
                         
                 if cols[1].button(f"Show Steps 🪜 #{i}", key=f"steps_{i}"):
-                    res = call_gemini(f"Show step-by-step solution:\n\n{msg['text']}")
+                    res = call_gemini([f"Show step-by-step solution:\n\n{msg['text']}"])
                     if not res.get("error"):
                         append_assistant_message(res["text"])
                         st.rerun()
 
                 if cols[2].button(f"Generate Quiz 🎯 #{i}", key=f"quiz_{i}"):
-                    res = call_gemini(f"Create 5 MCQs from this:\n\n{msg['text']}")
+                    res = call_gemini([f"Create 5 MCQs from this:\n\n{msg['text']}"])
                     if not res.get("error"):
                         append_assistant_message(res["text"])
                         st.rerun()
                         
                 if cols[3].button(f"Flashcards 🧾 #{i}", key=f"flash_{i}"):
-                    res = call_gemini(f"Create flashcards from this:\n\n{msg['text']}")
+                    res = call_gemini([f"Create flashcards from this:\n\n{msg['text']}"])
                     if not res.get("error"):
                         append_assistant_message(res["text"])
                         st.rerun()
@@ -199,7 +181,6 @@ with right:
         uploaded_pdf = None
         uploaded_image = None
         
-        # Handle file uploaders based on radio selection
         if input_choice == "PDF + Text":
             uploaded_pdf = st.file_uploader("Upload PDF (≤10MB):", type=["pdf"])
         elif input_choice == "Image + Text":
@@ -208,51 +189,46 @@ with right:
         submit = st.form_submit_button("Send")
 
         if submit:
-            content_parts = []
-            
-            # 1. Process PDF
-            if uploaded_pdf:
-                pdf_bytes = uploaded_pdf.read()
-                pdf_text = extract_text_from_pdf(io.BytesIO(pdf_bytes))
-                if pdf_text:
-                    content_parts.append("PDF content:\n" + pdf_text)
-                else:
-                    st.warning("PDF text extraction failed.")
-            
-            # 2. Process Image
-            if uploaded_image:
-                img_bytes = uploaded_image.read()
-                if TESSERACT_AVAILABLE:
-                    ocr_text = ocr_image(img_bytes)
-                    if ocr_text:
-                        content_parts.append("Image OCR text:\n" + ocr_text)
-                    else:
-                        st.warning("Image OCR failed.")
-                else:
-                    st.info("OCR not available.")
+            # Prepare the content list for Gemini
+            request_content = []
+            display_text = [] # For showing in the chat history
 
-            # 3. Process User Text
+            # 1. System Preamble (Text)
+            system_prompt = "You are NexStudy Tutor. Answer clearly. If the user sends an image, analyze it."
+            request_content.append(system_prompt)
+
+            # 2. User Text Input
             if user_input and user_input.strip():
-                content_parts.append("User question:\n" + user_input.strip())
+                request_content.append(user_input)
+                display_text.append(user_input)
 
-            # 4. Final Validation & API Call
-            if not content_parts:
-                st.warning("Please provide a question or upload a file.")
+            # 3. PDF Text
+            if uploaded_pdf:
+                pdf_text = extract_text_from_pdf(uploaded_pdf)
+                if pdf_text:
+                    request_content.append(f"PDF Context:\n{pdf_text}")
+                    display_text.append("[Uploaded PDF]")
+
+            # 4. Image Input (The Key Fix)
+            if uploaded_image:
+                try:
+                    img = Image.open(uploaded_image)
+                    request_content.append(img) # Send actual image object to Gemini
+                    display_text.append("[Uploaded Image]")
+                except Exception as e:
+                    st.error(f"Error processing image: {e}")
+
+            if not display_text and not uploaded_image and not uploaded_pdf:
+                st.warning("Please enter text or upload a file.")
             else:
-                full_text = "\n\n".join(content_parts)
-                append_user_message(full_text)
+                # Show user message in chat
+                append_user_message("\n".join(display_text))
 
                 if gemini_model is None:
                     st.error("Gemini API Key missing.")
                 else:
-                    with st.spinner("Thinking..."):
-                        sys_prompt = """You are NexStudy Tutor. Answer clearly and concisely. 
-                        If the user asks for steps, provide them. 
-                        Base answers on the uploaded content if present."""
-                        
-                        final_prompt = f"{sys_prompt}\n\nUser Content:\n{full_text}\n\nAnswer:"
-                        
-                        res = call_gemini(final_prompt)
+                    with st.spinner("Analyzing..."):
+                        res = call_gemini(request_content)
                         
                         if res.get("error"):
                             st.error(res["error"])
